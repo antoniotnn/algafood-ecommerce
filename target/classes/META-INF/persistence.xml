@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
+             version="2.2">
+    <persistence-unit name="Ecommerce-PU">
+
+        <!--
+              BUSCANDO CONEXOES DE UM NOME JNDI:
+
+            configuracao de data source externo, do servidor de aplicações, usar por padrao sufixo DS. Ex: nomedatasourceDS
+            se usar isso, entao as configuracoes de bancos de dados normais passadas por tag property devem ser comentadas (logo mais abaixo)
+            em javax.persistence.jdbc.url e etc.
+            Para isso usar a tag jta-data-source abaixo:
+
+            <jta-data-source>projetoDS</jta-data-source>
+        -->
+
+        <mapping-file>META-INF/consultas/pedido.xml</mapping-file>
+        <mapping-file>META-INF/consultas/produto.xml</mapping-file>
+        <mapping-file>META-INF/consultas/categoria.xml</mapping-file>
+
+        <!-- coloquei quando usei o eclipse link a propriedade abaixo -->
+<!--        <exclude-unlisted-classes>false</exclude-unlisted-classes>-->
+
+        <!-- outro local para configurar a shared cache do hibernate-testing -->
+        <!-- modos:
+            UNSPECIFIED: é a padrão. No caso quem define o que vai acontecer com a cache é a implementação (hibernate), nesse caso ele não cacheia nada.
+            NONE: Não colocar nenhuma entidade no cache.
+            DISABLE_SELECTIVE: é pra utilizar a Cache todas as entidades, mas aquelas entidades que estiverem com a propriedade Cacheable = false, não é pra cachear
+                ou seja, não terá Cache de segundo nivel.
+            ALL: Ativa o cache para todos forçadamente, ou seja mesmo se alguma entidade usar a anotação Cacheable(false), não funcionará a anotação.
+            ENABLE_SELECTIVE: Só vai habilitar o cache para Entidades que estiverem explicitamente anotadas com @Cacheable(true)
+        -->
+
+        <!-- propriedade usada tanto para hibernate-testing e sua funcao de cache nao profissional, quanto para ehcache q eh profissional -->
+        <shared-cache-mode>ALL</shared-cache-mode>
+
+        <!--
+                SOBRE VALIDACOES:
+            só de colocarmos no path, o jar, referente as validações do bean validation ( no caso o hibernate-validator, que são as especificações
+            no caso e não as implementações, já conseguimos colocar as anotações @NotNull e etc, porém NÃO CONSEGUIMOS UTILIZAR,
+            pois precisamos de uma implementaçao dessa especificação. A declaração no pom.xml ja faz o que precisamos (hibernate-validator)
+
+            modos:
+
+            AUTO: se o hibernate-validator (hibernate-core) estiver no path, então utilize o bean validation para validar as entidades antes de persistir.
+            CALLBACK: obriga que alguma implementação do bean validation esteja no path (pom.xml)
+            NONE: desabilita total o bean validation
+        -->
+        <validation-mode>CALLBACK</validation-mode>
+
+        <properties>
+
+            <!--
+                Propriedades abaixo devem ser comentadas SE usarmos um servidor de aplicações como o glassfish por exemplo, (ver tag
+                acima jta-data-source comentada) onde existam configurações proprias de bancos de dados, pool de conexões e etc,
+                e a partir daí, aqui no persistence sao configurados os mapeamentos para enxergar esse servidor de aplicacoes.
+                Nesse caso comentaríamos as config abaixo de banco e do hikari
+            -->
+            <!-- a de baixo eh comentada quando contempla o exemplo de um banco de dados apenas pra varios tenacy , identificados por uma coluna na tabela -->
+            <!-- MYSQL -->
+            <property name="javax.persistence.jdbc.url"
+                      value="jdbc:mysql://localhost/algaworks_ecommerce?createDatabaseIfNotExist=true&amp;useTimezone=true&amp;serverTimezone=UTC" />
+            <property name="javax.persistence.jdbc.user" value="root" />
+            <property name="javax.persistence.jdbc.password" value="1234567" />
+            <property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver" />
+
+            <!-- POSTGRESQL -->
+<!--            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost/algaworks_ecommerce" />-->
+<!--            <property name="javax.persistence.jdbc.user" value="postgres" />-->
+<!--            <property name="javax.persistence.jdbc.password" value="1234567" />-->
+<!--            <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver" />-->
+
+            <!-- Exemplo abaixo para banco com multitenacy por COLUNA -->
+<!--            <property name="javax.persistence.jdbc.url"-->
+<!--                      value="jdbc:mysql://localhost/ecommerce?createDatabaseIfNotExist=true&amp;useTimezone=true&amp;serverTimezone=UTC" />-->
+
+
+            <!-- configuracoes para o ecache - cache profissinal -->
+            <property name="hibernate.cache.region.factory_class" value="org.hibernate.cache.jcache.internal.JCacheRegionFactory"/>
+            <property name="hibernate.javax.cache.provider" value="org.ehcache.jsr107.EhcacheCachingProvider"/>
+            <property name="hibernate.javax.cache.uri" value="META-INF/ehcache.xml"/>
+
+            <!-- propriedade de cache do hibernate-testing, pode ser configurada em outro local, como a tag shared-cache-mode -->
+<!--            <property name="javax.persistence.sharedCache.mode" value="ALL"/>-->
+
+<!--            <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>-->
+            <property name="javax.persistence.schema-generation.database.action" value="none"/>
+<!--            <property name="javax.persistence.schema-generation.database.action" value="drop"/>-->
+<!--            <property name="javax.persistence.schema-generation.database.action" value="create"/>-->
+
+            <property name="javax.persistence.sql-load-script-source" value="META-INF/banco-de-dados/dados-iniciais.sql"/>
+            <property name="javax.persistence.schema-generation.create-script-source" value="META-INF/banco-de-dados/script-criacao.sql"/>
+            <property name="javax.persistence.schema-generation.drop-script-source" value="META-INF/banco-de-dados/script-remocao.sql"/>
+
+
+            <!-- Massa dados postgres
+            <property name="javax.persistence.sql-load-script-source" value="META-INF/banco-de-dados/dados-iniciais-postgres.sql"/>
+            <property name="javax.persistence.schema-generation.create-script-source" value="META-INF/banco-de-dados/script-criacao-postgres.sql"/>
+            <property name="javax.persistence.schema-generation.drop-script-source" value="META-INF/banco-de-dados/script-remocao-postgres.sql"/>
+            -->
+
+<!--            <property name="javax.persistence.schema-generation.create-source" value="metadata"/>-->
+<!--            <property name="javax.persistence.schema-generation.create-source" value="script"/>-->
+            <property name="javax.persistence.schema-generation.create-source" value="metadata-then-script"/>
+<!--            <property name="javax.persistence.schema-generation.create-source" value="script-then-metadata"/>-->
+
+<!--            <property name="javax.persistence.schema-generation.drop-source" value="metadata"/>-->
+<!--            <property name="javax.persistence.schema-generation.drop-source" value="script"/>-->
+            <property name="javax.persistence.schema-generation.drop-source" value="metadata-then-script"/>
+<!--            <property name="javax.persistence.schema-generation.drop-source" value="script-then-metadata"/>-->
+
+
+            <!-- EXPORTACAO DE SCRIPTS -->
+<!--            <property name="javax.persistence.schema-generation.scripts.action" value="drop-and-create"/>-->
+<!--            <property name="javax.persistence.schema-generation.scripts.action" value="drop"/>-->
+<!--            <property name="javax.persistence.schema-generation.scripts.action" value="create"/>-->
+<!--            <property name="javax.persistence.schema-generation.scripts.action" value="none"/>-->
+<!--            <property name="javax.persistence.schema-generation.scripts.create-target" value="C:/tmp/sql/script-criacao-exportado.sql"/>-->
+<!--            <property name="javax.persistence.schema-generation.scripts.drop-target" value="C:/tmp/sql/script-remocao-exportado.sql"/>-->
+
+            <!-- Para EclipseLink nivel de LOG -->
+<!--            <property name="eclipselink.logging.level" value="FINE"/>-->
+
+            <!-- Dialeto do MSYSQL -->
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect" />
+
+            <!-- Dialeto do POSTGRES -->
+<!--            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQL10Dialect"/>-->
+
+            <!-- Multi Tenacy Configs: Se usar abordagem por COLUNA no banco, remover todas as configs abaixo de multitenacy -->
+
+            <!-- Desativa o MultiTenacy -->
+<!--            <property name="hibernate.multiTenancy" value="NONE" />-->
+            <!-- Multitenacy por SCHEMA -->
+<!--            <property name="hibernate.multiTenancy" value="SCHEMA"/>-->
+
+            <!-- Multitenacy por Banco de Dados (database) -->
+<!--            <property name="hibernate.multiTenancy" value="DATABASE"/>-->
+
+            <!-- Multitenacy config de SCHEMA E DATABASE:
+                Mapeia no Java a Classe responsavel por identificar o Schema a ser acessado, pra qual schema será a conexão usado em SCHEMA E DATABASE
+            -->
+<!--            <property name="hibernate.tenant_identifier_resolver"-->
+<!--                      value="com.algaworks.ecommerce.hibernate.EcmCurrentTenantIdentifierResolver"/>-->
+
+            <!-- Multitenacy config de SCHEMA: Mapeia no Java a Classe responsavel por criar a conexão abordagem SCHEMA-->
+<!--            <property name="hibernate.multi_tenant_connection_provider"-->
+<!--                      value="com.algaworks.ecommerce.hibernate.EcmSchemaMultiTenantConnectionProvider"/>-->
+
+            <!-- Multitenacy config de DATABASE: Mapeia no Java a Classe responsavel por criar a conexão abordagem DATABASE -->
+<!--            <property name="hibernate.multi_tenant_connection_provider"-->
+<!--                      value="com.algaworks.ecommerce.hibernate.EcmMachineMultiTenantConnectionProvider"/>-->
+
+            <!--
+                Hikari CP Pool de Conexões
+                DOC: https://github.com/brettwooldridge/HikariCP
+            -->
+            <property name="hibernate.connection.provider_class" value="org.hibernate.hikaricp.internal.HikariCPConnectionProvider"/>
+            <!-- Numero do Pool de conexões, geralmente é o dobro de cores da máquina onde roda o banco, (recomenda-se, mas tem que testar) -->
+            <property name="hibernate.hikari.maximumPoolSize" value="8"/>
+
+            <property name="hibernate.show_sql" value="true" />
+            <property name="hibernate.format_sql" value="true" />
+        </properties>
+    </persistence-unit>
+</persistence>
